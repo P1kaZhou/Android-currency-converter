@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="euros_label">€</string>
+    <string name="dollars_label">$</string>
+    <string name="pounds_label">£</string>
+    <string name="button_convert">Choose rates</string>
+</resources>
