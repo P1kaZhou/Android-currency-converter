@@ -19,9 +19,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 public class CurrencyChooserActivity extends AppCompatActivity {
@@ -36,22 +38,9 @@ public class CurrencyChooserActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_currency_chooser);
 
-        Executor executor = Executors.newSingleThreadExecutor();
-        executor.execute(new Runnable() {
-            //TODO: FIX THE THINGS
-            @Override
-            public void run() {
-                try {
-                    System.out.println("I am before the loadlejson, in the executor");
-                    rates = loadLeJson();
-                    System.out.println("I passed the loadlejson, in the executor");
-                } catch (IOException e) {
-                    System.out.println("GROS MALAISE");
-                    e.printStackTrace();
-                }
-            }
-        });
-        applyTheRates();
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        //todo: fix the things, i don't know argh
     }
 
     public void applyTheRates(){
