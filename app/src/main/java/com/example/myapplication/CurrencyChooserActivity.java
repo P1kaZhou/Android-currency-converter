@@ -2,9 +2,13 @@ package com.example.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-import android.widget.RadioButton;
+
+import android.widget.RadioGroup;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,28 +17,66 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class CurrencyChooserActivity extends AppCompatActivity {
 
-    public static final int EURO_ID = 1;
-    public static final int DOLLAR_ID = 2;
-    public static final int POUNDS_ID = 3;
+    double usdToEuro;
+    double usdToPounds;
+    double valueToConvert;
+    JSONObject rates;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_currency_chooser);
-        JSONObject leJson = loadLeJson();
+
+        Executor executor = Executors.newSingleThreadExecutor();
+        executor.execute(new Runnable() {
+            //TODO: FIX THE THINGS
+            @Override
+            public void run() {
+                try {
+                    System.out.println("I am before the loadlejson, in the executor");
+                    rates = loadLeJson();
+                    System.out.println("I passed the loadlejson, in the executor");
+                } catch (IOException e) {
+                    System.out.println("GROS MALAISE");
+                    e.printStackTrace();
+                }
+            }
+        });
+        applyTheRates();
     }
 
-    public JSONObject loadLeJson() {
-        InputStream inputStream = getResources().openRawResource(R.raw.taux_2017_11_02);
+    public void applyTheRates(){
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            valueToConvert = extras.getDouble("ToConvert");
+            try {
+                System.out.println("je suis dans le applyTheRates");
+                usdToEuro = rates.getJSONObject("rates").getDouble("EUR");
+                usdToPounds = rates.getJSONObject("rates").getDouble("GBP");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public JSONObject loadLeJson() throws IOException {
+        URL exchangeRatesURL =
+                new URL("https://perso.telecom-paristech.fr/eagan/class/igr201/data/rates_2017_11_02.json");
+        InputStream inputStream = exchangeRatesURL.openStream();
         StringBuilder stringBuilder = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line + "\n");
+                stringBuilder.append(line).append("\n");
             }
             String jsonString = stringBuilder.toString();
             return new JSONObject(jsonString);
@@ -46,34 +88,58 @@ public class CurrencyChooserActivity extends AppCompatActivity {
         return null;
     }
 
-    public ArrayList<Integer> getSourceAndDestination(View view){
-        // We get all buttons first
-        RadioButton euroSourceButton = (RadioButton) findViewById(R.id.euro_button_source);
-        RadioButton dollarSourceButton = (RadioButton) findViewById(R.id.dollar_button_source);
-        RadioButton poundsSourceButton = (RadioButton) findViewById(R.id.pounds_button_source);
-        RadioButton euroDestinationButton = (RadioButton) findViewById(R.id.euro_button_destination);
-        RadioButton dollarDestinationButton = (RadioButton) findViewById(R.id.dollar_button_destination);
-        RadioButton poundsDestinationButton = (RadioButton) findViewById(R.id.pounds_button_destination);
+    public void returnStuff(View view) {
+        double rate = findTheRate(usdToEuro, usdToPounds);
+        Intent myIntent = new Intent(CurrencyChooserActivity.this, MainActivity.class);
+        double convertedValue = valueToConvert * rate;
+        myIntent.putExtra("initialValue", valueToConvert);
+        myIntent.putExtra("convertedValue", convertedValue);
+        startActivity(myIntent);
+        //myIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        //startActivityIfNeeded(myIntent, 0);
+    }
 
-        ArrayList<Integer> leResult = new ArrayList<>();
+    public double findTheRate(double usdToEuro, double usdToPounds) {
 
-        if (euroSourceButton.isChecked()){
-            leResult.add(EURO_ID);
-        } else if (dollarSourceButton.isChecked()){
-            leResult.add(DOLLAR_ID);
-        } else if (poundsSourceButton.isChecked()){
-            leResult.add(POUNDS_ID);
+        double euroToUsd = 1 / usdToEuro;
+        double poundsToUsd = 1 / usdToPounds;
+        double poundsToEuro = usdToEuro / usdToPounds;
+        double euroToPounds = usdToPounds / usdToEuro;
+        RadioGroup source = findViewById(R.id.source);
+        RadioGroup destination = findViewById(R.id.destination);
+
+        int sourceId = source.getCheckedRadioButtonId();
+        int destinationId = destination.getCheckedRadioButtonId();
+
+        if (sourceId == -1 || destinationId == -1) {
+            return 0; // Later
         }
 
-        if (euroDestinationButton.isChecked()){
-            leResult.add(EURO_ID);
-        } else if (dollarDestinationButton.isChecked()){
-            leResult.add(DOLLAR_ID);
-        } else if (poundsDestinationButton.isChecked()){
-            leResult.add(POUNDS_ID);
+        if (sourceId == R.id.euro_button_source) { // Case one: from euro
+            if (destinationId == R.id.euro_button_destination) {
+                return 1.;
+            } else if (destinationId == R.id.dollar_button_destination) {
+                return euroToUsd;
+            } else {
+                return euroToPounds;
+            }
+        } else if (sourceId == R.id.dollar_button_source) { // From USD
+            if (destinationId == R.id.euro_button_destination) {
+                return usdToEuro;
+            } else if (destinationId == R.id.dollar_button_destination) {
+                return 1.;
+            } else {
+                return usdToPounds;
+            }
+        } else { // From pounds
+            if (destinationId == R.id.euro_button_destination) {
+                return poundsToEuro;
+            } else if (destinationId == R.id.dollar_button_destination) {
+                return poundsToUsd;
+            } else {
+                return 1.;
+            }
         }
-
-        return leResult;
     }
 
 }
