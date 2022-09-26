@@ -4,8 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 
 import android.widget.RadioGroup;
@@ -17,13 +15,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 
 public class CurrencyChooserActivity extends AppCompatActivity {
@@ -31,7 +25,6 @@ public class CurrencyChooserActivity extends AppCompatActivity {
     double usdToEuro;
     double usdToPounds;
     double valueToConvert;
-    JSONObject rates;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,24 +32,29 @@ public class CurrencyChooserActivity extends AppCompatActivity {
         setContentView(R.layout.activity_currency_chooser);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
+        JsonRatesLoader jsonRatesLoader = new JsonRatesLoader(new JSONObject());
 
-        //todo: fix the things, i don't know argh
+        executorService.execute(jsonRatesLoader);
+
+        applyTheRates(jsonRatesLoader.getJsonRatesLoader());
     }
 
-    public void applyTheRates(){
+    public void applyTheRates(JSONObject rates) {
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             valueToConvert = extras.getDouble("ToConvert");
             try {
                 System.out.println("je suis dans le applyTheRates");
                 usdToEuro = rates.getJSONObject("rates").getDouble("EUR");
+                System.out.println("I got usdtoEuro! and the answer is " + usdToEuro);
                 usdToPounds = rates.getJSONObject("rates").getDouble("GBP");
+                System.out.println("I got usdToPounds! and the answer is" + usdToPounds);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
     }
-
+    /*
     public JSONObject loadLeJson() throws IOException {
         URL exchangeRatesURL =
                 new URL("https://perso.telecom-paristech.fr/eagan/class/igr201/data/rates_2017_11_02.json");
@@ -75,7 +73,7 @@ public class CurrencyChooserActivity extends AppCompatActivity {
             System.err.println("Warning something json " + e.getLocalizedMessage());
         }
         return null;
-    }
+    }*/
 
     public void returnStuff(View view) {
         double rate = findTheRate(usdToEuro, usdToPounds);
@@ -101,6 +99,7 @@ public class CurrencyChooserActivity extends AppCompatActivity {
         int destinationId = destination.getCheckedRadioButtonId();
 
         if (sourceId == -1 || destinationId == -1) {
+            System.out.println("Malaise while reading the radiobuttons");
             return 0; // Later
         }
 
