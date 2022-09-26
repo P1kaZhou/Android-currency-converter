@@ -8,25 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.concurrent.Callable;
 
-public class JsonRatesLoader implements Runnable {
+public class JsonRatesLoader implements Callable<JSONObject> {
 
-    private JSONObject jsonRatesLoader;
-
-    public JsonRatesLoader(JSONObject jsonRatesLoader) {
-        this.jsonRatesLoader = jsonRatesLoader;
-    }
-
-    public JSONObject getJsonRatesLoader() {
-        return this.jsonRatesLoader;
-    }
-
-    @Override
-    public void run() {
-        fetchJsonFromUrlAndLoad();
-    }
-
-    public void fetchJsonFromUrlAndLoad() {
+    public JSONObject fetchJsonFromUrlAndLoad() {
         try {
             URL exchangeRatesURL =
                     new URL("https://perso.telecom-paristech.fr/eagan/class/igr201/data/rates_2017_11_02.json");
@@ -38,16 +24,20 @@ public class JsonRatesLoader implements Runnable {
                     stringBuilder.append(line).append("\n");
                 }
                 String jsonString = stringBuilder.toString();
-                this.jsonRatesLoader = new JSONObject(jsonString);
+                return new JSONObject(jsonString);
 
-            } catch (IOException e) {
-                System.err.println("Warning something " + e.getLocalizedMessage());
-            } catch (JSONException e) {
-                System.err.println("Warning something json " + e.getLocalizedMessage());
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
             }
 
         } catch (IOException e) {
-            System.out.println("gros malaise mf");
+            e.printStackTrace();
         }
+        return null;
+    }
+
+    @Override
+    public JSONObject call() {
+        return fetchJsonFromUrlAndLoad();
     }
 }
