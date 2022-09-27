@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,23 +28,32 @@ public class MainActivity extends AppCompatActivity {
                 double value = extras.getDouble("convertedValue");
                 String initialValue = Double.toString(extras.getDouble("initialValue"));
                 String convertedCurrency = extras.getString("convertedCurrency");
-                updateText(Math.floor(value * 100) / 100 + convertedCurrency, initialValue);
+                String originCurrency = extras.getString("originCurrency");
+                updateText(Math.floor(value * 100) / 100 + " " + convertedCurrency,
+                        initialValue, originCurrency, true);
+                TextView equalBox = findViewById(R.id.center_text);
+                equalBox.setVisibility(View.VISIBLE);
             } else {
                 String value = Double.toString(extras.getDouble("initialValue"));
-                updateText("Please make sure that both boxes are checked",value);
+                updateText("Please make sure that both boxes are checked",value, "", false);
             }
         }
     }
 
-    public void updateText(String answer, String initial) {
-        EditText answerBox = findViewById(R.id.result);
+    public void updateText(String answer, String initial, String origin, boolean saulGoodman) {
+        TextView originBox = findViewById(R.id.origin);
+        TextView answerBox = findViewById(R.id.result);
         EditText inputBox = findViewById(R.id.edit_currency);
         answerBox.setText(answer);
         inputBox.setText(initial);
-
+        if (saulGoodman) {
+            originBox.setText(initial + " " + origin);
+        }
     }
 
     public void switchActivity(View view) {
+        TextView equalBox = findViewById(R.id.center_text);
+        equalBox.setVisibility(View.INVISIBLE);
         EditText startCurrency = findViewById(R.id.edit_currency);
         Intent myIntent = new Intent(MainActivity.this, CurrencyChooserActivity.class);
 

@@ -1,8 +1,10 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">Super stonks</string>
     <string name="euros_label">€</string>
     <string name="dollars_label">$</string>
     <string name="pounds_label">£</string>
     <string name="button_convert">Choose rates</string>
     <string name="hint">10.0</string>
+    <string name="top_title">Please enter the desired amount</string>
+    <string name="is_equal_to">is equal to</string>
 </resources>

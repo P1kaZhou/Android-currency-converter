@@ -23,7 +23,8 @@ public class CurrencyChooserActivity extends AppCompatActivity {
     double usdToPounds;
     double valueToConvert;
 
-    String currencyDestination = "amongus" ; // So it is not null no matter what
+    String currencyDestination = ":(" ; // So it is not null no matter what
+    String currencySource = ":)";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,7 @@ public class CurrencyChooserActivity extends AppCompatActivity {
             myIntent.putExtra("convertedValue", convertedValue);
             myIntent.putExtra("convertedCurrency", currencyDestination);
             myIntent.putExtra("Error", false);
+            myIntent.putExtra("originCurrency", currencySource);
         } else {
             myIntent.putExtra("initialValue", valueToConvert);
             myIntent.putExtra("convertedValue",
@@ -85,40 +87,45 @@ public class CurrencyChooserActivity extends AppCompatActivity {
         int sourceId = source.getCheckedRadioButtonId();
         int destinationId = destination.getCheckedRadioButtonId();
 
-        if (sourceId == -1 || destinationId == -1) {
+        if (sourceId == -1 || destinationId == -1) { // Make sure both buttons are checked,
+            // or else...
             return -1.;
         }
 
         if (sourceId == R.id.euro_button_source) { // Case one: from euro
+            currencySource = "EUR";
             if (destinationId == R.id.euro_button_destination) {
-                currencyDestination = "€";
+                currencyDestination = "EUR";
                 return 1.;
             } else if (destinationId == R.id.dollar_button_destination) {
-                currencyDestination = "$";
+                currencyDestination = "USD";
                 return euroToUsd;
             } else {
-                currencyDestination = "£";
+                currencyDestination = "GBP";
                 return euroToPounds;
             }
         } else if (sourceId == R.id.dollar_button_source) { // From USD
+            currencySource = "USD";
             if (destinationId == R.id.euro_button_destination) {
-                currencyDestination = "€";
+                currencyDestination = "EUR";
                 return usdToEuro;
             } else if (destinationId == R.id.dollar_button_destination) {
-                currencyDestination = "$";
+                currencyDestination = "USD";
                 return 1.;
             } else {
+                currencyDestination = "GBP";
                 return usdToPounds;
             }
         } else { // From pounds
+            currencySource = "GBP";
             if (destinationId == R.id.euro_button_destination) {
-                currencyDestination = "€";
+                currencyDestination = "EUR";
                 return poundsToEuro;
             } else if (destinationId == R.id.dollar_button_destination) {
-                currencyDestination = "$";
+                currencyDestination = "USD";
                 return poundsToUsd;
             } else {
-                currencyDestination = "£";
+                currencyDestination = "GBP";
                 return 1.;
             }
         }
